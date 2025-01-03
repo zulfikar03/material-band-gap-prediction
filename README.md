@@ -1,0 +1,1 @@
+# MEGNET and CGCNN Model
