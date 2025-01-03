@@ -1,4 +1,4 @@
-from src.layers.layer import RBFExpansion, MEGNetBlock, CGCNNBlock
+from src.layers.layer import rbf_expansion, MEGNetBlock, CGCNNBlock
 from torch_geometric.nn import Set2Set, global_add_pool, global_max_pool, global_mean_pool
 from torch import nn
 import torch
@@ -6,7 +6,6 @@ import torch
 class MEGNETModel(nn.Module):
     def __init__(self, n_node_features, n_edge_features, n_state_features, hidden_dim=32):
         super(MEGNETModel, self).__init__()
-        self.rbf = RBFExpansion(start=0,end=5,num_centers=100)
         self.embedding = nn.Embedding(num_embeddings=100, embedding_dim=n_node_features)
         self.megnet_blocks1 = MEGNetBlock(n_node_features, n_edge_features, n_state_features)
         self.megnet_blocks2 = MEGNetBlock(n_node_features=hidden_dim, n_edge_features=hidden_dim, n_state_features=hidden_dim)
@@ -29,7 +28,7 @@ class MEGNETModel(nn.Module):
 
     def forward(self, data):
         x = self.embedding(data.x).squeeze()
-        edge_attr = self.rbf(data.edge_attr)
+        edge_attr = rbf_expansion(edge_attr=edge_attr, device=edge_attr.device)
         x, edge_attr, state = self.megnet_blocks1(x, data.edge_index, edge_attr, data.state, data.batch) 
         x, edge_attr, state = self.megnet_blocks2(x, data.edge_index, edge_attr, state, data.batch)
         x = self.set2set_nodes(x, data.batch)
