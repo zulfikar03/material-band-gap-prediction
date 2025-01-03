@@ -28,7 +28,7 @@ class MEGNETModel(nn.Module):
 
     def forward(self, data):
         x = self.embedding(data.x).squeeze()
-        edge_attr = rbf_expansion(edge_attr=edge_attr, device=edge_attr.device)
+        edge_attr = rbf_expansion(edge_attr=data.edge_attr, device=data.edge_attr.device)
         x, edge_attr, state = self.megnet_blocks1(x, data.edge_index, edge_attr, data.state, data.batch) 
         x, edge_attr, state = self.megnet_blocks2(x, data.edge_index, edge_attr, state, data.batch)
         x = self.set2set_nodes(x, data.batch)
