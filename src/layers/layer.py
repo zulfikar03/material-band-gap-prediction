@@ -17,10 +17,10 @@ class MEGNet_Edge(nn.Module):
     def __init__(self, dim=32):  
         super(MEGNet_Edge, self).__init__()
         self.edge_dense = nn.Sequential(nn.Linear(dim*4, dim),
-                                        nn.Softplus(),
+                                        nn.ReLU(),
                                         nn.BatchNorm1d(dim),
                                         nn.Linear(dim, dim),
-                                        nn.Softplus(),
+                                        nn.ReLU(),
                                         nn.BatchNorm1d(dim),
                                         nn.Linear(dim, dim),
                                         nn.BatchNorm1d(dim))
@@ -35,10 +35,10 @@ class MEGNet_Node(nn.Module):
     def __init__(self, dim=32):
         super(MEGNet_Node, self).__init__()
         self.node_dense = nn.Sequential(nn.Linear(dim*3, dim),
-                                        nn.Softplus(),
+                                        nn.ReLU(),
                                         nn.BatchNorm1d(dim),
                                         nn.Linear(dim, dim),
-                                        nn.Softplus(),
+                                        nn.ReLU(),
                                         nn.BatchNorm1d(dim),
                                         nn.Linear(dim, dim),
                                         nn.BatchNorm1d(dim))
@@ -56,10 +56,10 @@ class MEGNet_State(nn.Module):
     def __init__(self, dim=32):
         super(MEGNet_State, self).__init__()
         self.state_dense = nn.Sequential(nn.Linear(dim*3, dim),
-                                         nn.Softplus(),
+                                         nn.ReLU(),
                                          nn.BatchNorm1d(dim),
                                          nn.Linear(dim, dim),
-                                         nn.Softplus(),
+                                         nn.ReLU(),
                                          nn.BatchNorm1d(dim),
                                          nn.Linear(dim, dim),
                                          nn.BatchNorm1d(dim))
