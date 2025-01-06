@@ -108,9 +108,9 @@ class MEGNetBlock(nn.Module):
         e = self.e_dense(edge_attr)
         v = self.v_dense(x)
         u = self.u_dense(state)
-        e = self.update_edge(v, edge_index, e, u, batch)
-        v = self.update_node(v, edge_index, e, u, batch)
-        u = self.update_state(v, edge_index, e, u, batch)
+        e = self.update_edge(v, edge_index, e, u, batch) + e
+        v = self.update_node(v, edge_index, e, u, batch) + v
+        u = self.update_state(v, edge_index, e, u, batch) + u
         return v, e, u
 
 class CGCNNBlock(MessagePassing):
