@@ -114,21 +114,29 @@ class MEGNetBlock(nn.Module):
         return v, e, u
 
 class CGCNNBlock(MessagePassing):
-    def __init__(self, n_node_features, n_edge_features, aggr):
+    def __init__(self, n_node_features, n_edge_features, aggr='mean', batch_norm=False):
         super(CGCNNBlock, self).__init__(aggr=aggr)
         self.fc1 = nn.Linear(2*n_node_features+n_edge_features, n_node_features)
         self.fc2 = nn.Linear(2*n_node_features+n_edge_features, n_node_features)
-        self.sigma = nn.Sigmoid()
-        self.g = nn.Softplus()
+        if batch_norm:
+            self.bn = nn.BatchNorm1d(n_node_features)
+        else:
+            self.bn = None
         self.reset_parameters()
 
     def reset_parameters(self):
         return super().reset_parameters()
         self.fc1.reset_parameters()
         self.fc2.reset_parameters()
+        if self.bn is not None:
+            self.bn.reset_parameters()
         
     def forward(self, x, edge_index, edge_attr):
         out = self.propagate(edge_index, x=x, edge_attr=edge_attr)
+        if self.bn is not None:
+            out = self.bn(out)
+        else:
+            out = out
         out = out + x
         return out
     
