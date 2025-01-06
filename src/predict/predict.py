@@ -94,7 +94,7 @@ class EnsembleLearning:
                 preds = [model(data) for model in models[:top_k]]
                 avg_pred = torch.mean(torch.stack(preds), dim=0)
                 predictions.append(avg_pred)
-        return torch.cat(predictions, dim=0).squeeze().numpy()
+        return torch.cat(predictions, dim=0).squeeze().cpu().numpy()
     
     def plot_evaluation(self, data_loader, top_k):
         mae_errors = []
@@ -112,10 +112,8 @@ class EnsembleLearning:
         plt.grid(True)
         plt.show()
 
-    def save_predictions(self, y_real, y_pred, csv_output_dir):
-        os.makedirs(os.path.dirname(csv_output_dir), exist_ok=True)
+    def save_predictions(self, y_real, y_pred):
         df = pd.DataFrame({'y_real':y_real, 'y_predict':y_pred})
-        df.to_csv(f'{csv_output_dir}/megnet.csv')
         return df
         
     def _load_model(self, checkpoint):
@@ -128,7 +126,7 @@ class EnsembleLearning:
         return model
     
     def _load_checkpoints(self):
-        checkpoint_files = glob.glob(self.checkpoints_dir+'\*.pt')
+        checkpoint_files = glob.glob(f'{self.checkpoints_dir}/*.pt')
         checkpoints = []
         for file in checkpoint_files:
             checkpoint = torch.load(file)
@@ -143,3 +141,9 @@ class EnsembleLearning:
             y_reals.append(data.y.cpu())
         y_real = torch.cat(y_reals).squeeze().numpy()
         return y_real
+    
+    def _get_evaluation_metrics(self, y_real, y_pred):
+        mae = mean_absolute_error(y_real, y_pred)
+        mse = mean_squared_error(y_real, y_pred)
+        r2 = r2_score(y_real, y_pred)
+        return {'mae':mae, 'mse':mse, 'r2_score':r2}
