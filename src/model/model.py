@@ -44,8 +44,6 @@ class CGCNNModel(torch.nn.Module):
         
         self.CGCNNConv = nn.ModuleList([CGCNNBlock(n_node_features, n_edge_features, aggr='mean', batch_norm=True) for i in range(num_blocks)])
         
-        CGCNNBlock(n_node_features, n_edge_features, batch_norm=True)
-
         self.dense = nn.Sequential(nn.Linear(3*n_node_features, 32),
                                     nn.ReLU(),
                                     nn.Dropout(0.2),
