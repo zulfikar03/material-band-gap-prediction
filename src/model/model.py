@@ -39,10 +39,12 @@ class MEGNETModel(nn.Module):
         return out
     
 class CGCNNModel(torch.nn.Module):
-    def __init__(self, n_node_features, n_edge_features):
+    def __init__(self, n_node_features, n_edge_features, num_blocks):
         super(CGCNNModel, self).__init__()
         
-        self.conv = CGCNNBlock(n_node_features, n_edge_features, batch_norm=True)
+        self.CGCNNConv = nn.ModuleList([CGCNNBlock(n_node_features, n_edge_features, aggr='mean', batch_norm=True) for i in range(num_blocks)])
+        
+        CGCNNBlock(n_node_features, n_edge_features, batch_norm=True)
 
         self.output = nn.Sequential(nn.Linear(3*n_node_features, 32),
                                     nn.ReLU(),
@@ -55,7 +57,8 @@ class CGCNNModel(torch.nn.Module):
     def forward(self, data):
         x, edge_index, edge_attr, batch_index = data.x, data.edge_index, data.edge_attr, data.batch
         
-        x = self.conv(x, edge_index, edge_attr)
+        for block in self.CGCNNConv:
+            x = block(x, edge_index, edge_attr)
         x = torch.cat([global_mean_pool(x, batch_index),
                        global_add_pool(x, batch_index),
                        global_max_pool(x, batch_index)], dim=1)
