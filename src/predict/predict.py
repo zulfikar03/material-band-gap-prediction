@@ -79,19 +79,17 @@ class Prediction:
     
 
 class EnsembleLearning:
-    def __init__(self, model, device, checkpoints_dir):
-        self.model = model
+    def __init__(self, models, device, checkpoints_dir):
+        self.models = models
         self.device = device
         self.checkpoints_dir = checkpoints_dir
 
     def ensemble_predict(self, data_loader, top_k):
-        checkpoints = self._load_checkpoints()
-        models = [self._load_model(checkpoint) for _, checkpoint in checkpoints]
         predictions = []
         with torch.no_grad():
             for data in data_loader:
                 data = data.to(self.device)
-                preds = [model(data) for model in models[:top_k]]
+                preds = [model(data) for model in self.models[:top_k]]
                 avg_pred = torch.mean(torch.stack(preds), dim=0)
                 predictions.append(avg_pred)
         return torch.cat(predictions, dim=0).squeeze().cpu().numpy()
@@ -116,25 +114,6 @@ class EnsembleLearning:
         df = pd.DataFrame({'y_real':y_real, 'y_predict':y_pred})
         return df
         
-    def _load_model(self, checkpoint):
-        if self.model == 'MEGNet':
-            model = MEGNETModel(16, 100, 6).to(self.device)
-        elif self.model == 'CGCGNN':
-            model = CGCNNModel(92, 100).to(self.device)
-        model.load_state_dict(checkpoint['model_state_dict'])
-        model.eval()
-        return model
-    
-    def _load_checkpoints(self):
-        checkpoint_files = glob.glob(f'{self.checkpoints_dir}/*.pt')
-        checkpoints = []
-        for file in checkpoint_files:
-            checkpoint = torch.load(file)
-            val_loss = checkpoint['val_loss']
-            checkpoints.append((val_loss, checkpoint))
-        checkpoints.sort(key=lambda x: x[0])
-        return checkpoints
-  
     def _get_y_real_labels(self, data_loader):
         y_reals = []
         for data in data_loader:
