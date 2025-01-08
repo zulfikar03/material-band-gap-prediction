@@ -61,5 +61,5 @@ class CGCNNModel(torch.nn.Module):
                        global_add_pool(x, batch_index),
                        global_max_pool(x, batch_index)], dim=1)
         x = self.dense(x)
-        out = self.output(x)
+        out = self.out(x)
         return out
