@@ -125,19 +125,18 @@ class CGCNNBlock(MessagePassing):
         self.reset_parameters()
 
     def reset_parameters(self):
-        return super().reset_parameters()
+        super().reset_parameters()
         self.fc1.reset_parameters()
         self.fc2.reset_parameters()
         if self.bn is not None:
             self.bn.reset_parameters()
         
     def forward(self, x, edge_index, edge_attr):
+        if isinstance(x, Tensor):
+            x = (x, x)
         out = self.propagate(edge_index, x=x, edge_attr=edge_attr)
-        if self.bn is not None:
-            out = self.bn(out)
-        else:
-            out = out
-        out = out + x
+        out = out if self.bn is None else self.bn(out)
+        out = out + x[1]
         return out
     
     def message(self, x_i, x_j, edge_attr):
