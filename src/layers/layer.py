@@ -7,11 +7,20 @@ from torch_geometric.utils import scatter
 from torch_geometric.nn import MessagePassing
 from torch_geometric.typing import Adj, OptTensor, PairTensor
 
-def rbf_expansion(edge_attr, start=0, end=5, num_centers=100, sigma=0.5, device='cpu'):
-    centers = torch.linspace(start, end, num_centers, device=device)  # Shape (num_centers,)
-    edge_attr = edge_attr.view(-1, 1).to(device)  # Shape (num_edges, 1)
-    rbf_features = torch.exp(-((edge_attr - centers) ** 2) / (2 * sigma**2))  # Shape (num_edges, num_centers)  
-    return rbf_features
+class RBFExpansion(torch.nn.Module):
+    def __init__(self, start: float, end: float, num_centers: int):
+        super(RBFExpansion, self).__init__()
+        self.sigma = 0.5
+        self.start = start
+        self.end = end
+        self.num_centers = num_centers
+
+    def forward(self, edge_attribute, device):
+        centers = torch.linspace(self.start, self.end, self.num_centers).to(device)
+        edge_attribute = edge_attribute.view(-1, 1).to(self.device)  # Shape (num_edges, 1)
+        rbf = torch.exp(-((edge_attribute - centers) ** 2) / (2 * self.sigma**2)).to(device)
+        return rbf
+
 
 class MEGNet_Edge(nn.Module):
     def __init__(self, dim=32):  
