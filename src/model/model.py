@@ -59,8 +59,8 @@ class CGCNNModel(nn.Module):
         for block in self.CGCNNConv:
             x = block(x, edge_index, edge_attr)
         x = torch.cat([global_mean_pool(x, batch_index),
-                       global_add_pool(x, batch_index),
-                       global_max_pool(x, batch_index)], dim=1)
+                       global_max_pool(x, batch_index),
+                       global_add_pool(x, batch_index)], dim=1)
         x = self.dense(x)
         out = self.out(x)
         return out
