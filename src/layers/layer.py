@@ -17,7 +17,7 @@ class RBFExpansion(torch.nn.Module):
 
     def forward(self, edge_attr, device):
         centers = torch.linspace(self.start, self.end, self.num_centers).to(device)
-        edge_attr = edge_attr.view(-1, 1).to(self.device)  # Shape (num_edges, 1)
+        edge_attr = edge_attr.view(-1, 1).to(device)  # Shape (num_edges, 1)
         rbf = torch.exp(-((edge_attr - centers) ** 2) / (2 * self.sigma**2)).to(device)
         return rbf
 
