@@ -1,5 +1,5 @@
 from src.layers.layer import rbf_expansion, MEGNetBlock, CGCNNBlock
-from torch_geometric.nn import Set2Set, global_add_pool, global_max_pool, global_mean_pool
+from torch_geometric.nn import Set2Set, global_add_pool, global_max_pool, global_mean_pool, CGConv
 from torch import nn
 import torch
 
@@ -38,11 +38,11 @@ class MEGNETModel(nn.Module):
         out = self.output(dense_output)
         return out
     
-class CGCNNModel(torch.nn.Module):
+class CGCNNTModel(nn.Module):
     def __init__(self, n_node_features, n_edge_features, num_blocks):
-        super(CGCNNModel, self).__init__()
+        super(CGCNNTorch, self).__init__()
         
-        self.CGCNNConv = nn.ModuleList([CGCNNBlock(n_node_features, n_edge_features, aggr='mean', batch_norm=True) for i in range(num_blocks)])
+        self.CGCNNConv = nn.ModuleList([CGConv(n_node_features, n_edge_features, aggr='mean', batch_norm=True) for i in range(num_blocks)])
         
         self.dense = nn.Sequential(nn.Linear(3*n_node_features, 32),
                                     nn.ReLU(),
