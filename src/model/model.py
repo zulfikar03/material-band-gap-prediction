@@ -1,4 +1,4 @@
-from src.layers.layer import rbf_expansion, MEGNetBlock, CGCNNBlock
+from src.layers.layer import rbf_expansion, MEGNetBlock
 from torch_geometric.nn import Set2Set, global_add_pool, global_max_pool, global_mean_pool, CGConv
 from torch import nn
 import torch
@@ -38,9 +38,9 @@ class MEGNETModel(nn.Module):
         out = self.output(dense_output)
         return out
     
-class CGCNNTModel(nn.Module):
+class CGCNNModel(nn.Module):
     def __init__(self, n_node_features, n_edge_features, num_blocks):
-        super(CGCNNTorch, self).__init__()
+        super(CGCNNModel, self).__init__()
         
         self.CGCNNConv = nn.ModuleList([CGConv(n_node_features, n_edge_features, aggr='mean', batch_norm=True) for i in range(num_blocks)])
         
