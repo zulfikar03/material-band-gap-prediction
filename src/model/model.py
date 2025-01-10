@@ -1,4 +1,4 @@
-from src.layers.layer import GaussianExpansion, MEGNetBlock, AtomEncoder
+from src.layers.layer import GaussianExpansion, MEGNetBlock
 from torch_geometric.nn import Set2Set, global_add_pool, global_max_pool, global_mean_pool, CGConv
 from torch import nn
 import torch
