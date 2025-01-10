@@ -7,9 +7,9 @@ from torch_geometric.utils import scatter
 from torch_geometric.nn import MessagePassing
 from torch_geometric.typing import Adj, OptTensor, PairTensor
 
-class RBFExpansion(torch.nn.Module):
+class GaussianExpansion(torch.nn.Module):
     def __init__(self, start: float, end: float, num_centers: int, sigma=0.5):
-        super(RBFExpansion, self).__init__()
+        super(GaussianExpansion, self).__init__()
         self.sigma = sigma
         self.start = start
         self.end = end
