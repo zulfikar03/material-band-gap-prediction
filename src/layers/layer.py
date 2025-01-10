@@ -22,7 +22,28 @@ class GaussianExpansion(torch.nn.Module):
         rbf = torch.exp(-((edge_attr - self.centers) ** 2) / (self.sigma**2)).to(device)
         return rbf
 
+class AtomEncoder(torch.nn.Module):
+    def __init__(self, n_node_features, hidden_channels):
+        super(AtomEncoder, self).__init__()
 
+        self.embeddings = torch.nn.ModuleList()
+
+        for i in range(n_node_features):
+            self.embeddings.append(torch.nn.Embedding(100, hidden_channels))
+
+    def reset_parameters(self):
+        for embedding in self.embeddings:
+            embedding.reset_parameters()
+
+    def forward(self, x):
+        if x.dim() == 1:
+            x = x.unsqueeze(1)
+
+        out = 0
+        for i in range(x.size(1)):
+            out += self.embeddings[i](x[:, i])
+        return out
+    
 class MEGNet_Edge(nn.Module):
     def __init__(self, dim=32):  
         super(MEGNet_Edge, self).__init__()
