@@ -29,7 +29,7 @@ class MEGNETModel(nn.Module):
 
     def forward(self, data):
         x = self.embedding(data.x).squeeze()
-        edge_attr = self.rbf(edge_attr=data.edge_attr, device=data.edge_attr.device)
+        edge_attr = self.rbf(edge_attr=data.edge_attr)
         x, edge_attr, state = self.megnet_blocks1(x, data.edge_index, edge_attr, data.state, data.batch) 
         x, edge_attr, state = self.megnet_blocks2(x, data.edge_index, edge_attr, state, data.batch)
         x = self.set2set_nodes(x, data.batch)
@@ -55,7 +55,7 @@ class CGCNNModel(nn.Module):
 
     def forward(self, data):
         x, edge_index, edge_attr, batch_index = data.x, data.edge_index, data.edge_attr, data.batch
-        edge_attr = self.rbf(edge_attr=edge_attr, device=edge_attr.device)
+        edge_attr = self.rbf(edge_attr=edge_attr)
         for block in self.CGCNNConv:
             x = block(x, edge_index, edge_attr)
         x = torch.cat([global_mean_pool(x, batch_index),
