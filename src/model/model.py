@@ -44,7 +44,7 @@ class CGCNNModel(nn.Module):
         super(CGCNNModel, self).__init__()
         
         self.rbf = RBFExpansion(start=0.0, end=5.0, num_centers=100)
-        self.CGCNNConv = nn.ModuleList([CGConv(n_node_features, n_edge_features, aggr='mean', batch_norm=True) for i in range(num_blocks)])
+        self.CGCNNConv = nn.ModuleList([CGConv(n_node_features, n_edge_features, aggr='add', batch_norm=True) for i in range(num_blocks)])
         self.dense = nn.Sequential(nn.Linear(3*n_node_features, 32),
                                     nn.ReLU(),
                                     nn.Dropout(0.2),
