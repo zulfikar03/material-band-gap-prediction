@@ -1,4 +1,4 @@
-from src.layers.layer import GaussianExpansion, MEGNetBlock
+from src.layers.layer import GaussianExpansion, MEGNetBlock, AtomEncoder
 from torch_geometric.nn import Set2Set, global_add_pool, global_max_pool, global_mean_pool, CGConv
 from torch import nn
 import torch
@@ -40,12 +40,13 @@ class MEGNETModel(nn.Module):
         return out
     
 class CGCNNModel(nn.Module):
-    def __init__(self, n_node_features, n_edge_features, num_blocks):
+    def __init__(self, n_node_features, n_edge_features, hidden_channels, num_blocks):
         super(CGCNNModel, self).__init__()
         
         self.ge = GaussianExpansion(start=0.0, end=5.0, num_centers=100)
-        self.CGCNNConv = nn.ModuleList([CGConv(n_node_features, n_edge_features, aggr='add', batch_norm=True) for i in range(num_blocks)])
-        self.dense = nn.Sequential(nn.Linear(3*n_node_features, 32),
+        self.embedding = AtomEncoder(n_node_features, hidden_channels)
+        self.CGCNNConv = nn.ModuleList([CGConv(hidden_channels, n_edge_features, aggr='add', batch_norm=True) for i in range(num_blocks)])
+        self.dense = nn.Sequential(nn.Linear(3*hidden_channels, 32),
                                     nn.ReLU(),
                                     nn.Dropout(0.2),
                                     nn.Linear(32, 16),
@@ -55,6 +56,7 @@ class CGCNNModel(nn.Module):
 
     def forward(self, data):
         x, edge_index, edge_attr, batch_index = data.x, data.edge_index, data.edge_attr, data.batch
+        x = self.embedding(x)
         edge_attr = self.ge(edge_attr=edge_attr)
         for block in self.CGCNNConv:
             x = block(x, edge_index, edge_attr)
