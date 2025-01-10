@@ -8,17 +8,18 @@ from torch_geometric.nn import MessagePassing
 from torch_geometric.typing import Adj, OptTensor, PairTensor
 
 class RBFExpansion(torch.nn.Module):
-    def __init__(self, start: float, end: float, num_centers: int):
+    def __init__(self, start: float, end: float, num_centers: int, sigma=0.5):
         super(RBFExpansion, self).__init__()
-        self.sigma = 0.5
+        self.sigma = sigma
         self.start = start
         self.end = end
         self.num_centers = num_centers
+        self.register_buffer('centers', torch.linspace(start, end, num_centers))
 
-    def forward(self, edge_attr, device):
-        centers = torch.linspace(self.start, self.end, self.num_centers).to(device)
+    def forward(self, edge_attr):
+        device = self.centers.device
         edge_attr = edge_attr.view(-1, 1).to(device)  # Shape (num_edges, 1)
-        rbf = torch.exp(-((edge_attr - centers) ** 2) / (2 * self.sigma**2)).to(device)
+        rbf = torch.exp(-((edge_attr - self.centers) ** 2) / (2 * self.sigma**2)).to(device)
         return rbf
 
 
