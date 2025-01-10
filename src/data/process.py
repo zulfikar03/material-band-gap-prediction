@@ -160,8 +160,8 @@ class CGCNNDataset(Dataset):
             if atom_number in atom_features:
                 vector_node = atom_features[atom_number]
                 all_node_features.append(vector_node)
-        all_node_feats = np.array(all_node_features, dtype=np.float32)
-        node_features = torch.tensor(all_node_feats, dtype=torch.float32)
+        all_node_feats = np.array(all_node_features, dtype=np.int32)
+        node_features = torch.tensor(all_node_feats, dtype=torch.int32)
         return node_features
     
     def _get_edge_features(self, structure):
