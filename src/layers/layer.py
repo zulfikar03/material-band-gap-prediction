@@ -94,22 +94,16 @@ class MEGNetBlock(nn.Module):
         super(MEGNetBlock, self).__init__()
         self.e_dense = nn.Sequential(nn.Linear(n_edge_features, 64),
                                      nn.ReLU(),
-                                     nn.BatchNorm1d(64),
                                      nn.Linear(64, 32),
-                                     nn.ReLU(),
-                                     nn.BatchNorm1d(32))
+                                     nn.ReLU())
         self.v_dense = nn.Sequential(nn.Linear(n_node_features, 64),
                                      nn.ReLU(),
-                                     nn.BatchNorm1d(64),
                                      nn.Linear(64, 32),
-                                     nn.ReLU(),
-                                     nn.BatchNorm1d(32))
+                                     nn.ReLU())
         self.u_dense = nn.Sequential(nn.Linear(n_state_features, 64),
                                      nn.ReLU(),
-                                     nn.BatchNorm1d(64),
                                      nn.Linear(64, 32),
-                                     nn.ReLU(),
-                                     nn.BatchNorm1d(32))
+                                     nn.ReLU())
         self.update_edge = MEGNet_Edge()
         self.update_node = MEGNet_Node()
         self.update_state = MEGNet_State()
