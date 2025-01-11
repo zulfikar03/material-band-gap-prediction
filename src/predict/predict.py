@@ -110,6 +110,27 @@ class EnsembleLearning:
         plt.grid(True)
         plt.show()
 
+    def evaluate_ensemble_metrics(self, data_loader, top_k):
+        mae_errors = []
+        mse_errors = []
+        r2_scores = []
+        y_real = self._get_y_real_labels(data_loader)
+        for k in range(1, top_k+1):
+            preds = self.ensemble_predict(data_loader, k)
+            mae = mean_absolute_error(y_real, preds)
+            mse = mean_squared_error(y_real, preds)
+            r2 = r2_score(y_real, preds)
+            mae_errors.append(mae)
+            mse_errors.append(mse)
+            r2_scores.append(r2)
+        results_df = pd.DataFrame({
+        'Top_K': range(1, top_k + 1),
+        'MAE': mae_errors,
+        'MSE': mse_errors,
+        'R2_Score': r2_scores
+        })
+        return results_df
+        
     def save_predictions(self, y_real, y_pred):
         df = pd.DataFrame({'y_real':y_real, 'y_predict':y_pred})
         return df
