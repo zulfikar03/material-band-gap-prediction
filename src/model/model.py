@@ -18,10 +18,8 @@ class MEGNETModel(nn.Module):
                                      num_layers=1)
         self.dense = nn.Sequential(
             nn.Linear(2*hidden_dim+2*hidden_dim+hidden_dim, 32),
-            nn.BatchNorm1d(32),
             nn.ReLU(),
             nn.Linear(32, 16),
-            nn.BatchNorm1d(16),
             nn.ReLU(),
             nn.Dropout(0.2)
         )
