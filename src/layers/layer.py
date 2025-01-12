@@ -116,3 +116,25 @@ class MEGNetBlock(nn.Module):
         v = self.update_node(v, edge_index, e, u, batch) + v
         u = self.update_state(v, edge_index, e, u, batch) + u
         return v, e, u
+    
+class CGCNNBlock(MessagePassing):
+    def __init__(self, n_node_features, n_edge_features, aggr='add', batch_norm=True):
+        super(CGCNNBlock, self).__init__(aggr=aggr)
+        self.fc1 = nn.Linear(2*n_node_features+n_edge_features, n_node_features)
+        self.fc2 = nn.Linear(2*n_node_features+n_edge_features, n_node_features)
+        if batch_norm:
+            self.bn = nn.BatchNorm1d(n_node_features)
+        else:
+            self.bn = None
+
+    def forward(self, x, edge_index, edge_attr):
+        if isinstance(x, Tensor):
+            x = (x, x)
+        out = self.propagate(edge_index, x=x, edge_attr=edge_attr)
+        out = out if self.bn is None else self.bn(out)
+        out = out + x[1]
+        return out
+
+    def message(self, x_i, x_j, edge_attr):
+        z = torch.cat([x_i, x_j, edge_attr], dim=1)
+        return F.sigmoid(self.fc1(z)) * F.softplus(self.fc2(z))
