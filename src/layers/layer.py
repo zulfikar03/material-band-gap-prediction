@@ -97,24 +97,17 @@ class MEGNetBlock(nn.Module):
                                      nn.ReLU(),
                                      nn.Linear(64, 32),
                                      nn.ReLU())
-        self.bn = nn.BatchNorm1d(32)
         self.update_edge = MEGNet_Edge()
         self.update_node = MEGNet_Node()
         self.update_state = MEGNet_State()
         
     def forward(self, x, edge_index, edge_attr, state, batch):
-        e_emb = self.e_dense(edge_attr)
-        v_emb = self.v_dense(x)
-        u_emb = self.u_dense(state)
-        e = self.update_edge(v_emb, edge_index, e_emb, u_emb, batch)
-        e = self.bn(e)
-        e = torch.add(e, e_emb) 
-        v = self.update_node(v_emb, edge_index, e_emb, u_emb, batch) 
-        v = self.bn(v)
-        v = torch.add(v, v_emb)
-        u = self.update_state(v_emb, edge_index, e_emb, u_emb, batch) 
-        u = self.bn(u)
-        u = torch.add(u, u_emb)
+        e = self.e_dense(edge_attr)
+        v = self.v_dense(x)
+        u = self.u_dense(state)
+        e = self.update_edge(v, edge_index, e, u, batch) + e
+        v = self.update_node(v, edge_index, e, u, batch) + v
+        u = self.update_state(v, edge_index, e, u, batch) + u
         return v, e, u
     
 class CGCNNBlock(MessagePassing):
