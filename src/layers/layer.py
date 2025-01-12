@@ -33,6 +33,7 @@ class MEGNet_Edge(nn.Module):
                                         nn.BatchNorm1d(dim),
                                         nn.ReLU(),
                                         nn.Linear(dim, dim),
+                                        nn.BatchNorm1d(dim)
                                         )
 
     def forward(self, x, edge_index, edge_attr, state, batch):
@@ -50,7 +51,8 @@ class MEGNet_Node(nn.Module):
                                         nn.Linear(dim, dim),
                                         nn.BatchNorm1d(dim),
                                         nn.ReLU(),
-                                        nn.Linear(dim, dim)
+                                        nn.Linear(dim, dim),
+                                        nn.BatchNorm(dim),
                                         )
 
     def forward(self, x, edge_index, edge_attr, state, batch):
@@ -71,7 +73,8 @@ class MEGNet_State(nn.Module):
                                          nn.Linear(dim, dim),
                                          nn.BatchNorm1d(dim),
                                          nn.ReLU(),
-                                         nn.Linear(dim, dim)
+                                         nn.Linear(dim, dim),
+                                         nn.BatchNorm1d(dim)
                                          )
 
     def forward(self, x, edge_index, edge_attr, state, batch):
