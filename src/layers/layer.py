@@ -106,15 +106,15 @@ class MEGNetBlock(nn.Module):
         e_emb = self.e_dense(edge_attr)
         v_emb = self.v_dense(x)
         u_emb = self.u_dense(state)
-        e = self.update_edge(v, edge_index, e, u, batch)
+        e = self.update_edge(v_emb, edge_index, e_emb, u_emb, batch)
         e = self.bn(e)
         e = torch.add(e, e_emb) 
-        v = self.update_node(v, edge_index, e, u, batch) 
+        v = self.update_node(v_emb, edge_index, e_emb, u_emb, batch) 
         v = self.bn(v)
         v = torch.add(v, v_emb)
-        u = self.update_state(v, edge_index, e, u, batch) 
+        u = self.update_state(v_emb, edge_index, e_emb, u_emb, batch) 
         u = self.bn(u)
-        u = torch.add(u)
+        u = torch.add(u, u_emb)
         return v, e, u
     
 class CGCNNBlock(MessagePassing):
