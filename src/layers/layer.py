@@ -52,7 +52,7 @@ class MEGNet_Node(nn.Module):
                                         nn.BatchNorm1d(dim),
                                         nn.ReLU(),
                                         nn.Linear(dim, dim),
-                                        nn.BatchNorm(dim),
+                                        nn.BatchNorm1d(dim),
                                         )
 
     def forward(self, x, edge_index, edge_attr, state, batch):
