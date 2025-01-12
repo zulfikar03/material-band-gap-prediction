@@ -18,7 +18,7 @@ class GaussianExpansion(torch.nn.Module):
 
     def forward(self, edge_attr):
         device = self.centers.device
-        edge_attr = edge_attr.view(-1, 1).to(device)  # Shape (num_edges, 1)
+        edge_attr = edge_attr.view(-1, 1).to(device)
         rbf = torch.exp(-((edge_attr - self.centers) ** 2) / (self.sigma**2)).to(device)
         return rbf
 
@@ -27,10 +27,13 @@ class MEGNet_Edge(nn.Module):
     def __init__(self, dim=32):  
         super(MEGNet_Edge, self).__init__()
         self.edge_dense = nn.Sequential(nn.Linear(dim*4, dim),
+                                        nn.BatchNorm1d(dim),
                                         nn.ReLU(),
                                         nn.Linear(dim, dim),
+                                        nn.BatchNorm1d(dim),
                                         nn.ReLU(),
-                                        nn.Linear(dim, dim))
+                                        nn.Linear(dim, dim),
+                                        )
 
     def forward(self, x, edge_index, edge_attr, state, batch):
         src, dst = edge_index
@@ -42,8 +45,10 @@ class MEGNet_Node(nn.Module):
     def __init__(self, dim=32):
         super(MEGNet_Node, self).__init__()
         self.node_dense = nn.Sequential(nn.Linear(dim*3, dim),
+                                        nn.BatchNorm1d(dim),
                                         nn.ReLU(),
                                         nn.Linear(dim, dim),
+                                        nn.BatchNorm1d(dim),
                                         nn.ReLU(),
                                         nn.Linear(dim, dim)
                                         )
@@ -61,8 +66,10 @@ class MEGNet_State(nn.Module):
     def __init__(self, dim=32):
         super(MEGNet_State, self).__init__()
         self.state_dense = nn.Sequential(nn.Linear(dim*3, dim),
+                                         nn.BatchNorm1d(dim),
                                          nn.ReLU(),
                                          nn.Linear(dim, dim),
+                                         nn.BatchNorm1d(dim),
                                          nn.ReLU(),
                                          nn.Linear(dim, dim)
                                          )
