@@ -28,12 +28,9 @@ class MEGNet_Edge(nn.Module):
         super(MEGNet_Edge, self).__init__()
         self.edge_dense = nn.Sequential(nn.Linear(dim*4, dim),
                                         nn.ReLU(),
-                                        nn.BatchNorm1d(dim),
                                         nn.Linear(dim, dim),
                                         nn.ReLU(),
-                                        nn.BatchNorm1d(dim),
-                                        nn.Linear(dim, dim),
-                                        nn.BatchNorm1d(dim))
+                                        nn.Linear(dim, dim))
 
     def forward(self, x, edge_index, edge_attr, state, batch):
         src, dst = edge_index
@@ -46,12 +43,10 @@ class MEGNet_Node(nn.Module):
         super(MEGNet_Node, self).__init__()
         self.node_dense = nn.Sequential(nn.Linear(dim*3, dim),
                                         nn.ReLU(),
-                                        nn.BatchNorm1d(dim),
                                         nn.Linear(dim, dim),
                                         nn.ReLU(),
-                                        nn.BatchNorm1d(dim),
-                                        nn.Linear(dim, dim),
-                                        nn.BatchNorm1d(dim))
+                                        nn.Linear(dim, dim)
+                                        )
 
     def forward(self, x, edge_index, edge_attr, state, batch):
         v_mean = scatter(src=edge_attr,
@@ -67,12 +62,10 @@ class MEGNet_State(nn.Module):
         super(MEGNet_State, self).__init__()
         self.state_dense = nn.Sequential(nn.Linear(dim*3, dim),
                                          nn.ReLU(),
-                                         nn.BatchNorm1d(dim),
                                          nn.Linear(dim, dim),
                                          nn.ReLU(),
-                                         nn.BatchNorm1d(dim),
-                                         nn.Linear(dim, dim),
-                                         nn.BatchNorm1d(dim))
+                                         nn.Linear(dim, dim)
+                                         )
 
     def forward(self, x, edge_index, edge_attr, state, batch):
         edge_batch_map = batch[edge_index[0]]
@@ -104,17 +97,24 @@ class MEGNetBlock(nn.Module):
                                      nn.ReLU(),
                                      nn.Linear(64, 32),
                                      nn.ReLU())
+        self.bn = nn.BatchNorm1d(32)
         self.update_edge = MEGNet_Edge()
         self.update_node = MEGNet_Node()
         self.update_state = MEGNet_State()
         
     def forward(self, x, edge_index, edge_attr, state, batch):
-        e = self.e_dense(edge_attr)
-        v = self.v_dense(x)
-        u = self.u_dense(state)
-        e = self.update_edge(v, edge_index, e, u, batch) + e
-        v = self.update_node(v, edge_index, e, u, batch) + v
-        u = self.update_state(v, edge_index, e, u, batch) + u
+        e_emb = self.e_dense(edge_attr)
+        v_emb = self.v_dense(x)
+        u_emb = self.u_dense(state)
+        e = self.update_edge(v, edge_index, e, u, batch)
+        e = self.bn(e)
+        e = torch.add(e, e_emb) 
+        v = self.update_node(v, edge_index, e, u, batch) 
+        v = self.bn(v)
+        v = torch.add(v, v_emb)
+        u = self.update_state(v, edge_index, e, u, batch) 
+        u = self.bn(u)
+        u = torch.add(u)
         return v, e, u
     
 class CGCNNBlock(MessagePassing):
