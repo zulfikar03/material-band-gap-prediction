@@ -26,7 +26,7 @@ class GaussianExpansion(torch.nn.Module):
 class MEGNet_Edge(nn.Module):
     def __init__(self, dim=32):  
         super(MEGNet_Edge, self).__init__()
-        self.edge_dense = nn.Sequential(nn.Linear(dim*3, dim),
+        self.edge_dense = nn.Sequential(nn.Linear(dim*4, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
                                         nn.Linear(dim, dim),
