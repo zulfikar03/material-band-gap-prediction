@@ -215,8 +215,8 @@ def datasplit(dataset,
                                          shuffle=False,
                                          random_state=random_state)
 
-    train_loader = DataLoader(dataset[train_idx], batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(dataset[val_idx], batch_size=batch_size, shuffle=False)
-    test_loader = DataLoader(dataset[test_idx], batch_size=batch_size, shuffle=False)
+    train_loader = DataLoader(dataset[train_idx], batch_size=batch_size, shuffle=True, pin_memory=True)
+    val_loader = DataLoader(dataset[val_idx], batch_size=batch_size, shuffle=False, pin_memory=True)
+    test_loader = DataLoader(dataset[test_idx], batch_size=batch_size, shuffle=False, pin_memory=True)
 
     return train_loader, val_loader, test_loader
