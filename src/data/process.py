@@ -2,6 +2,8 @@ from torch_geometric.data import Data, Dataset
 from torch_geometric.loader import DataLoader
 from pymatgen.core import Structure
 from pymatgen.optimization.neighbors import find_points_in_spheres
+from scipy.stats import rankdata
+from torch_geometric.utils import dense_to_sparse, add_self_loops
 import numpy as np
 import torch
 from torch.functional import F
@@ -11,13 +13,15 @@ import os
 import json
 
 class MEGNetDataset(Dataset):
-    def __init__(self, root, df, name_database):
+    def __init__(self, root, df, r_max, n_neighbors, name_database):
         """
             root: merupakan tempat menyimpan file data torch_geomtric
             df: merupakan dataframe yang digunakan untuk merubah ke data graph
             database: diisi dengan nama MaterialsProject atau SNUMAT
         """
         self.df = df
+        self.r_max = r_max
+        self.n_neighbors = n_neighbors
         self.name_database = name_database
         super(MEGNetDataset, self).__init__(root)
     
@@ -46,10 +50,10 @@ class MEGNetDataset(Dataset):
                 state = self._get_states_SNUMAT(material)
                 label = self._get_labels(material['Band_gap_HSE'])
             node_features = self._get_node_features(structure)
-            edge_features, edge_index = self._get_edge_features(structure)
+            edge_index, edge_attr = self._get_edge_features(structure)
             data = Data(x=node_features,
                         edge_index=edge_index,
-                        edge_attr=edge_features,
+                        edge_attr=edge_attr,
                         state=state,
                         y=label
                         )
@@ -59,29 +63,29 @@ class MEGNetDataset(Dataset):
         node_features = [site.specie.number for site in structure]
         node_features = np.array(node_features, dtype=np.int32)
         return torch.tensor(node_features, dtype=torch.int32).view(-1,1)
+
+    def _trimming(self, distance_matrix, r_max, n_neighbors):
+        mask = distance_matrix > r_max
+        matrix_trimmed = np.ma.array(distance_matrix, mask=mask)
+        matrix_trimmed = rankdata(matrix_trimmed, method='ordinal', axis=1)
+        matrix_trimmed = np.nan_to_num(np.where(mask, np.nan, matrix_trimmed))
+        matrix_trimmed[matrix_trimmed>n_neighbors+1] = 0
+        matrix_trimmed = np.where(matrix_trimmed==0, matrix_trimmed, distance_matrix)
+        return matrix_trimmed
     
     def _get_edge_features(self, structure):
-        numerical_tol = 1.0e-8
-        lattice_matrix = structure.lattice.matrix
-        cart_coords = structure.cart_coords
-        pbc = np.array([1, 1, 1], dtype=np.int64)
-        src_id, dst_id, images, bond_dist = find_points_in_spheres(
-            cart_coords,
-            cart_coords,
-            r=5.0,
-            pbc=pbc,
-            lattice=lattice_matrix,
-            tol=numerical_tol,
-        )
-        exclude_self = (src_id != dst_id) | (bond_dist > numerical_tol)
-        src_id, dst_id, images, bond_dist =  (src_id[exclude_self],
-            dst_id[exclude_self],
-            images[exclude_self],
-            bond_dist[exclude_self])
-        edge_features = torch.tensor(bond_dist, dtype=torch.float32)
-        edge_index = np.array([src_id, dst_id], dtype=np.int64)
-        edge_index = torch.tensor(edge_index, dtype=torch.int64)
-        return edge_features, edge_index
+        distance = structure.distance_matrix
+        distance_matrix_trimmed = self._trimming(distance_matrix=distance, r_max=self.r_max, n_neighbors=self.n_neighbors)
+        distance_matrix_trimmed = torch.tensor(distance_matrix_trimmed, dtype=torch.float32)
+        out = dense_to_sparse(distance_matrix_trimmed)
+        edge_index = out[0]
+        edge_attr = out[1]
+        self_loops = True
+        if self_loops == True:
+            edge_index, edge_attr = add_self_loops(
+                edge_index, edge_attr, num_nodes=len(structure), fill_value=0
+            )
+        return edge_index, edge_attr
     
     def _get_states_MP(self, material):
         return torch.tensor([material['formation_energy_per_atom']], dtype=torch.float32).view(-1,1)
@@ -109,13 +113,15 @@ class MEGNetDataset(Dataset):
         return data
     
 class CGCNNDataset(Dataset):
-    def __init__(self, root, df, atom_features_dir, name_database):
+    def __init__(self, root, df, r_max, n_neighbors, atom_features_dir, name_database):
         """
             root: merupakan tempat menyimpan file data torch_geomtric
             df: merupakan dataframe yang digunakan untuk merubah ke data graph
             database: diisi dengan nama MaterialsProject atau SNUMAT
         """
         self.df = df
+        self.r_max = r_max
+        self.n_neighbors = n_neighbors
         self.name_database = name_database
         self.atom_features_dir = atom_features_dir
         super(CGCNNDataset, self).__init__(root)
@@ -164,28 +170,28 @@ class CGCNNDataset(Dataset):
         node_features = torch.tensor(all_node_feats, dtype=torch.int32)
         return node_features
     
+    def _trimming(self, distance_matrix, r_max, n_neighbors):
+        mask = distance_matrix > r_max
+        matrix_trimmed = np.ma.array(distance_matrix, mask=mask)
+        matrix_trimmed = rankdata(matrix_trimmed, method='ordinal', axis=1)
+        matrix_trimmed = np.nan_to_num(np.where(mask, np.nan, matrix_trimmed))
+        matrix_trimmed[matrix_trimmed>n_neighbors+1] = 0
+        matrix_trimmed = np.where(matrix_trimmed==0, matrix_trimmed, distance_matrix)
+        return matrix_trimmed
+    
     def _get_edge_features(self, structure):
-        numerical_tol = 1.0e-8
-        lattice_matrix = structure.lattice.matrix
-        cart_coords = structure.cart_coords
-        pbc = np.array([1, 1, 1], dtype=np.int64)
-        src_id, dst_id, images, bond_dist = find_points_in_spheres(
-            cart_coords,
-            cart_coords,
-            r=5.0,
-            pbc=pbc,
-            lattice=lattice_matrix,
-            tol=numerical_tol,
-        )
-        exclude_self = (src_id != dst_id) | (bond_dist > numerical_tol)
-        src_id, dst_id, images, bond_dist =  (src_id[exclude_self],
-            dst_id[exclude_self],
-            images[exclude_self],
-            bond_dist[exclude_self])
-        edge_features = torch.tensor(bond_dist, dtype=torch.float32)
-        edge_index = np.array([src_id, dst_id], dtype=np.int64)
-        edge_index = torch.tensor(edge_index, dtype=torch.int64)
-        return edge_features, edge_index
+        distance = structure.distance_matrix
+        distance_matrix_trimmed = self._trimming(distance_matrix=distance, r_max=self.r_max, n_neighbors=self.n_neighbors)
+        distance_matrix_trimmed = torch.tensor(distance_matrix_trimmed, dtype=torch.float32)
+        out = dense_to_sparse(distance_matrix_trimmed)
+        edge_index = out[0]
+        edge_attr = out[1]
+        self_loops = True
+        if self_loops == True:
+            edge_index, edge_attr = add_self_loops(
+                edge_index, edge_attr, num_nodes=len(structure), fill_value=0
+            )
+        return edge_index, edge_attr
     
     def _get_labels(self, label):
         return torch.tensor([label], dtype=torch.float32).view(-1,1)
