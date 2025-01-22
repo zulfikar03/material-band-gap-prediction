@@ -149,7 +149,7 @@ class CGCNNDataset(Dataset):
                 structure = Structure.from_str(material['Structure_rlx'], fmt='poscar')
                 label = self._get_labels(material['Band_gap_HSE'])
             node_features = self._get_node_features(structure)
-            edge_features, edge_index = self._get_edge_features(structure)
+            edge_index, edge_features = self._get_edge_features(structure)
             data = Data(x=node_features,
                         edge_index=edge_index,
                         edge_attr=edge_features,
