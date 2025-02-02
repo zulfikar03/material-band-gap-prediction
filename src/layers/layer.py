@@ -36,10 +36,8 @@ class MEGNet_Edge(nn.Module):
                                         nn.BatchNorm1d(dim),
                                         )
 
-    def forward(self, x, edge_index, edge_attr, state, batch):
-        src, dst = edge_index
-        edge_batch_map = batch[src]
-        comb = torch.concat([x[src], x[dst], edge_attr, state[edge_batch_map]], dim=1)
+    def forward(self, src, dst, edge_attr, state, batch):
+        comb = torch.concat([src, dst, edge_attr, state[batch]], dim=1)
         return self.edge_dense(comb)
 
 class MEGNet_Node(nn.Module):
