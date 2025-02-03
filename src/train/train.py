@@ -83,7 +83,6 @@ class ModelTrainer:
             'optimizer_state_dict': self.optimizer.state_dict(),
             'scheduler_state_dict': self.scheduler.state_dict(),
             'val_loss': val_loss,
-            'test_loss': test_loss
         }
         torch.save(checkpoint, path)
         print(f"Checkpoint saved at epoch {epoch} with val_loss: {val_loss:.7f} to {path}")
