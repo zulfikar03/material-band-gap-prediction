@@ -29,11 +29,14 @@ class MEGNet_Edge(nn.Module):
         self.edge_dense = nn.Sequential(nn.Linear(dim*4, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
+                                        nn.Dropout(0.2),
                                         nn.Linear(dim, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
+                                        nn.Dropout(0.2),
                                         nn.Linear(dim, dim),
                                         nn.BatchNorm1d(dim),
+                                        nn.Dropout(0.2)
                                         )
 
     def forward(self, src, dst, edge_attr, state, batch):
@@ -46,11 +49,14 @@ class MEGNet_Node(nn.Module):
         self.node_dense = nn.Sequential(nn.Linear(dim*3, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
+                                        nn.Dropout(0.2),
                                         nn.Linear(dim, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
+                                        nn.Dropout(0.2),
                                         nn.Linear(dim, dim),
                                         nn.BatchNorm1d(dim),
+                                        nn.Dropout(0.2)
                                         )
 
     def forward(self, x, edge_index, edge_attr, state, batch):
@@ -68,11 +74,14 @@ class MEGNet_State(nn.Module):
         self.state_dense = nn.Sequential(nn.Linear(dim*3, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
+                                        nn.Dropout(0.2),
                                         nn.Linear(dim, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
+                                        nn.Dropout(0.2),
                                         nn.Linear(dim, dim),
-                                        nn.BatchNorm1d(dim)
+                                        nn.BatchNorm1d(dim),
+                                        nn.Dropout(0.2)
                                          )
 
     def forward(self, x, edge_index, edge_attr, state, batch):
@@ -89,34 +98,6 @@ class MEGNet_State(nn.Module):
                       reduce='mean')
         comb = torch.concat([u_e, u_v, state], dim=1)
         return self.state_dense(comb)
-        
-class MEGNetBlock(nn.Module):
-    def __init__(self, n_node_features, n_edge_features, n_state_features):
-        super(MEGNetBlock, self).__init__()
-        self.e_dense = nn.Sequential(nn.Linear(n_edge_features, 64),
-                                     nn.ReLU(),
-                                     nn.Linear(64, 32),
-                                     nn.ReLU())
-        self.v_dense = nn.Sequential(nn.Linear(n_node_features, 64),
-                                     nn.ReLU(),
-                                     nn.Linear(64, 32),
-                                     nn.ReLU())
-        self.u_dense = nn.Sequential(nn.Linear(n_state_features, 64),
-                                     nn.ReLU(),
-                                     nn.Linear(64, 32),
-                                     nn.ReLU())
-        self.update_edge = MEGNet_Edge()
-        self.update_node = MEGNet_Node()
-        self.update_state = MEGNet_State()
-        
-    def forward(self, x, edge_index, edge_attr, state, batch):
-        e = self.e_dense(edge_attr)
-        v = self.v_dense(x)
-        u = self.u_dense(state)
-        e = self.update_edge(v, edge_index, e, u, batch) + e
-        v = self.update_node(v, edge_index, e, u, batch) + v
-        u = self.update_state(v, edge_index, e, u, batch) + u
-        return v, e, u
     
 class CGCNNBlock(MessagePassing):
     def __init__(self, n_node_features, n_edge_features, aggr='add', batch_norm=True):
