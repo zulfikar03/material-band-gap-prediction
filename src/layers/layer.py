@@ -35,6 +35,7 @@ class MEGNet_Edge(nn.Module):
                                         nn.BatchNorm1d(dim),
                                         nn.Dropout(0.2),
                                         nn.Linear(dim, dim),
+                                        nn.ReLU(),
                                         nn.BatchNorm1d(dim),
                                         nn.Dropout(0.2)
                                         )
@@ -55,6 +56,7 @@ class MEGNet_Node(nn.Module):
                                         nn.BatchNorm1d(dim),
                                         nn.Dropout(0.2),
                                         nn.Linear(dim, dim),
+                                        nn.ReLU(),
                                         nn.BatchNorm1d(dim),
                                         nn.Dropout(0.2)
                                         )
@@ -80,6 +82,7 @@ class MEGNet_State(nn.Module):
                                         nn.BatchNorm1d(dim),
                                         nn.Dropout(0.2),
                                         nn.Linear(dim, dim),
+                                        nn.ReLU(),
                                         nn.BatchNorm1d(dim),
                                         nn.Dropout(0.2)
                                          )
