@@ -1,4 +1,4 @@
-from src.layers.layer import GaussianExpansion, MEGNetBlock, CGCNNBlock, MEGNet_Edge, MEGNet_Node, MEGNet_State
+from src.layers.layer import GaussianExpansion, CGCNNBlock, MEGNet_Edge, MEGNet_Node, MEGNet_State
 from torch_geometric.nn import Set2Set, global_add_pool, global_max_pool, global_mean_pool, MetaLayer
 from torch import nn
 import torch
