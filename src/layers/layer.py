@@ -29,15 +29,14 @@ class MEGNet_Edge(nn.Module):
         self.edge_dense = nn.Sequential(nn.Linear(dim*4, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
-                                        nn.Dropout(0.2),
+                                        nn.Dropout(0.1),
                                         nn.Linear(dim, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
-                                        nn.Dropout(0.2),
+                                        nn.Dropout(0.1),
                                         nn.Linear(dim, dim),
-                                        nn.ReLU(),
                                         nn.BatchNorm1d(dim),
-                                        nn.Dropout(0.2)
+                                        nn.Dropout(0.1)
                                         )
 
     def forward(self, src, dst, edge_attr, state, batch):
@@ -50,15 +49,14 @@ class MEGNet_Node(nn.Module):
         self.node_dense = nn.Sequential(nn.Linear(dim*3, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
-                                        nn.Dropout(0.2),
+                                        nn.Dropout(0.1),
                                         nn.Linear(dim, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
-                                        nn.Dropout(0.2),
+                                        nn.Dropout(0.1),
                                         nn.Linear(dim, dim),
-                                        nn.ReLU(),
                                         nn.BatchNorm1d(dim),
-                                        nn.Dropout(0.2)
+                                        nn.Dropout(0.1)
                                         )
 
     def forward(self, x, edge_index, edge_attr, state, batch):
@@ -76,15 +74,14 @@ class MEGNet_State(nn.Module):
         self.state_dense = nn.Sequential(nn.Linear(dim*3, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
-                                        nn.Dropout(0.2),
+                                        nn.Dropout(0.1),
                                         nn.Linear(dim, dim),
                                         nn.ReLU(),
                                         nn.BatchNorm1d(dim),
-                                        nn.Dropout(0.2),
+                                        nn.Dropout(0.1),
                                         nn.Linear(dim, dim),
-                                        nn.ReLU(),
                                         nn.BatchNorm1d(dim),
-                                        nn.Dropout(0.2)
+                                        nn.Dropout(0.1)
                                          )
 
     def forward(self, x, edge_index, edge_attr, state, batch):
