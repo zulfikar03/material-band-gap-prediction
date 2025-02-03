@@ -39,16 +39,16 @@ class ModelTrainer:
             train_loss += loss.item()
         return train_loss / len(self.train_loader)
 
-    def test_step(self, loader):
+    def eval_step(self, loader):
         self.model.eval()
-        test_loss = 0
+        val_loss = 0
         with torch.no_grad():
             for data in loader:
                 data = data.to(self.device)
                 preds = self.model(data)
                 loss = self.loss_fn(preds, data.y)
-                test_loss += loss.item()
-        return test_loss/len(loader)
+                val_loss += loss.item()
+        return val_loss/len(loader)
 
     def fit(self, epochs):
         os.makedirs(os.path.dirname(self.csv_log_path), exist_ok=True)
@@ -56,27 +56,24 @@ class ModelTrainer:
         results = {
             'train_loss': [],
             'val_loss': [],
-            'test_loss': []
         }
         for epoch in tqdm(range(1, epochs+1)):
             lr = self.scheduler.optimizer.param_groups[0]['lr']
             train_loss = self.train_step()
-            val_loss = self.test_step(self.val_loader)
-            test_loss = self.test_step(self.test_loader)
+            val_loss = self.eval_step(self.val_loader)
             path = f'{self.checkpoints_path}/checkpoint_{epoch}.pt'
-            checkpoint = self.save_model(path, epoch, val_loss, test_loss)
+            checkpoint = self.save_model(path, epoch, val_loss)
             self.scheduler.step(val_loss)
             results['train_loss'].append(train_loss)
             results['val_loss'].append(val_loss)
-            results['test_loss'].append(test_loss)
             print(f'Epoch: {epoch:03d}, LR: {lr:7f}, Loss: {train_loss:.7f}, '
-              f'Val loss: {val_loss:.7f}, Test loss: {test_loss:.7f}')
+              f'Val loss: {val_loss:.7f}')
             
         train_log = pd.DataFrame(results)
         train_log.to_csv(self.csv_log_path)
         return train_log
 
-    def save_model(self, path, epoch, val_loss, test_loss):
+    def save_model(self, path, epoch, val_loss):
         checkpoint = {
             'epoch': epoch,
             'model_state_dict': self.model.state_dict(),
